@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SSE Test</title>
+  </head>
+  <body>
+    <h2>Live Notifications</h2>
+
+    <div id="notifications"></div>
+
+    <h2>Push Notification Test</h2>
+
+    <button id="subscribe">Subscribe</button>
+
+    <script>
+      const notifications = document.getElementById("notifications");
+
+      const source = new EventSource(
+        "http://localhost:5000/notifications/stream"
+      );
+
+      source.onopen = () => {
+        console.log("Connected");
+      };
+
+      source.onerror = (err) => {
+        console.log("Error", err);
+      };
+
+      source.onmessage = (event) => {
+        console.log("Message received", event.data);
+
+        const data = JSON.parse(event.data);
+
+        if (data.status === "connected") {
+          return;
+        }
+
+        const div = document.createElement("div");
+
+        div.innerHTML = `
+        <hr>
+        <p>User: ${data.userId}</p>
+        <p>Message: ${data.message}</p>
+        <p>Status: ${data.status}</p>
+    `;
+
+        notifications.prepend(div);
+      };
+    </script>
+
+    <script>
+      let swRegistration = null;
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+
+      async function getVapidKey() {
+        const response = await fetch("/notifications/vapid-public-key");
+        const data = await response.json();
+        return data.publicKey;
+      }
+
+      async function init() {
+        try {
+          swRegistration = await navigator.serviceWorker.register("/sw.js");
+          console.log("Service Worker Registered", swRegistration.scope);
+        } catch (err) {
+          console.error("SW registration failed:", err);
+        }
+      }
+
+      init();
+
+      document
+        .getElementById("subscribe")
+        .addEventListener("click", async () => {
+          if (!swRegistration) {
+            alert("Service Worker not registered yet. Please try again.");
+            return;
+          }
+
+          const permission = await Notification.requestPermission();
+
+          if (permission !== "granted") {
+            alert("Notification permission denied.");
+            return;
+          }
+
+          const publicVapidKey = await getVapidKey();
+          try {
+            const subscription = await swRegistration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
+            });
+
+            const response = await fetch(
+              "http://localhost:5000/notifications/subscribe",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  userId: "1",
+                  subscription,
+                }),
+              }
+            );
+
+            const data = await response.json();
+            alert(data.message);
+            // console.log("Subscription saved:", subscription);
+          } catch (err) {
+            console.error("Subscribe failed:", err);
+            alert("Failed to subscribe: " + err.message);
+          }
+        });
+    </script>
+  </body>
+</html>
