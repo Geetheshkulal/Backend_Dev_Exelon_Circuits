@@ -48,8 +48,12 @@ This starts:
 - RabbitMQ
 
 Verify:
-
+```bash
 docker ps
+```
+
+<img width="1858" height="988" alt="image" src="https://github.com/user-attachments/assets/c73cf777-b490-4786-a5a8-4dafcf8b6b06" />
+
 
 Install Dependencies
 
@@ -101,7 +105,13 @@ Testing <br>
 SSE <br>
 Open: <br>
 
-http://localhost:5000/sse.html
+http://localhost:5000/sse.html <br>
+<img width="1340" height="967" alt="image" src="https://github.com/user-attachments/assets/50780b62-a293-45af-8c40-01e1aeea7f3e" />
+
+<img width="1135" height="833" alt="image" src="https://github.com/user-attachments/assets/a7d67d51-843c-4377-be27-7730dfe99b12" />
+
+<img width="1491" height="957" alt="image" src="https://github.com/user-attachments/assets/f620d93c-42df-4600-ac35-bdf71232c1b8" />
+
 
 Send notification from Postman and observe real-time updates.
 
@@ -110,6 +120,9 @@ Web Push
 - Click Subscribe
 - Allow Notifications <br>
 - Call /notifications/send-push
+
+<img width="1912" height="982" alt="image" src="https://github.com/user-attachments/assets/b0b0e7c6-7dbe-4076-b761-4fc7915d5446" />
+
 
 A browser notification should appear.
 
